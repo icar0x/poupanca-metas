@@ -1,0 +1,22 @@
+-- =========================================================
+-- View: vw_metas_com_progresso
+-- Objetivo: consolidar cada meta com seu percentual de
+-- progresso, dias restantes até a data alvo e status atual.
+-- Utilizada na funcionalidade "Listar minhas metas" (RF03).
+-- =========================================================
+
+CREATE VIEW vw_metas_com_progresso AS
+SELECT
+    m.id AS meta_id,
+    m.usuario_id,
+    m.nome AS nome_meta,
+    m.valor_alvo,
+    m.valor_atual,
+    ROUND((m.valor_atual / m.valor_alvo) * 100, 2) AS percentual_progresso,
+    (m.data_meta - CURRENT_DATE) AS dias_restantes,
+    CASE
+        WHEN m.concluida THEN 'concluida'
+        WHEN m.data_meta < CURRENT_DATE THEN 'atrasada'
+        ELSE 'em_progresso'
+    END AS status
+FROM meta m;

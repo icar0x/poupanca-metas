@@ -1,0 +1,43 @@
+-- =========================================================
+-- Sistema de Poupança com Metas
+-- Script de criação das tabelas
+-- =========================================================
+
+CREATE TABLE usuario (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    data_cadastro TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE meta (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER NOT NULL REFERENCES usuario(id),
+    nome VARCHAR(100) NOT NULL,
+    descricao VARCHAR(255),
+    valor_alvo NUMERIC(12,2) NOT NULL CHECK (valor_alvo > 0),
+    valor_atual NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (valor_atual >= 0),
+    data_criacao TIMESTAMP NOT NULL DEFAULT NOW(),
+    data_meta DATE NOT NULL,
+    concluida BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE deposito (
+    id SERIAL PRIMARY KEY,
+    meta_id INTEGER NOT NULL REFERENCES meta(id),
+    valor NUMERIC(12,2) NOT NULL CHECK (valor > 0),
+    data_deposito TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE historico_juros (
+    id SERIAL PRIMARY KEY,
+    meta_id INTEGER NOT NULL REFERENCES meta(id),
+    juros_calculados NUMERIC(12,2) NOT NULL,
+    data_calculo TIMESTAMP NOT NULL DEFAULT NOW(),
+    saldo_apos_juros NUMERIC(12,2) NOT NULL
+);
+
+-- Índices para consultas mais rápidas por chave estrangeira
+CREATE INDEX idx_meta_usuario ON meta(usuario_id);
+CREATE INDEX idx_deposito_meta ON deposito(meta_id);
+CREATE INDEX idx_historico_meta ON historico_juros(meta_id);

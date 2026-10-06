@@ -1,0 +1,19 @@
+-- =========================================================
+-- Sistema de Poupança com Metas
+-- Dados de teste
+-- =========================================================
+
+INSERT INTO usuario (nome, email) VALUES
+('Joao Silva', 'joao@email.com'),
+('Maria Souza', 'maria@email.com');
+
+INSERT INTO meta (usuario_id, nome, descricao, valor_alvo, valor_atual, data_meta) VALUES
+(1, 'Viagem para Paris', 'Viagem de 2 semanas em 2027', 5000.00, 1500.00, '2027-12-31'),
+(1, 'Notebook novo', 'Trocar o notebook atual', 4000.00, 4000.00, '2026-12-01'),
+(2, 'Reserva de emergência', 'Fundo para imprevistos', 10000.00, 2000.00, '2028-06-30');
+
+INSERT INTO deposito (meta_id, valor) VALUES
+(1, 500.00),
+(1, 1000.00),
+(2, 4000.00),
+(3, 2000.00);

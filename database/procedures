@@ -1,0 +1,57 @@
+-- =========================================================
+-- Procedure: registrar_deposito_em_meta
+-- Objetivo: registrar um depósito em uma meta, validar as
+-- regras de negócio (RN02, RN03) e atualizar o saldo,
+-- marcando a meta como concluída automaticamente se atingir
+-- o valor alvo (RN06).
+-- Utilizada na funcionalidade "Fazer depósito em meta" (RF04).
+--
+-- Parâmetros:
+--   p_meta_id         -> id da meta
+--   p_valor_deposito  -> valor a ser depositado
+-- =========================================================
+
+CREATE OR REPLACE PROCEDURE registrar_deposito_em_meta(
+    p_meta_id INTEGER,
+    p_valor_deposito NUMERIC
+)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_concluida BOOLEAN;
+    v_novo_saldo NUMERIC;
+    v_valor_alvo NUMERIC;
+BEGIN
+    -- RN02: valor deve ser positivo
+    IF p_valor_deposito <= 0 THEN
+        RAISE EXCEPTION 'O valor do depósito deve ser maior que zero';
+    END IF;
+
+    SELECT concluida, valor_alvo
+    INTO v_concluida, v_valor_alvo
+    FROM meta
+    WHERE id = p_meta_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Meta com id % não encontrada', p_meta_id;
+    END IF;
+
+    -- RN03: não permitir depósito em meta já concluída
+    IF v_concluida THEN
+        RAISE EXCEPTION 'Não é possível depositar em uma meta já concluída';
+    END IF;
+
+    INSERT INTO deposito (meta_id, valor)
+    VALUES (p_meta_id, p_valor_deposito);
+
+    UPDATE meta
+    SET valor_atual = valor_atual + p_valor_deposito
+    WHERE id = p_meta_id
+    RETURNING valor_atual INTO v_novo_saldo;
+
+    -- RN06: concluir automaticamente ao atingir o valor alvo
+    IF v_novo_saldo >= v_valor_alvo THEN
+        UPDATE meta SET concluida = TRUE WHERE id = p_meta_id;
+    END IF;
+END;
+$$;
