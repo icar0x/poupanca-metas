@@ -1,0 +1,46 @@
+-- =========================================================
+-- Function: calcular_juros_poupanca
+-- Objetivo: calcular os juros acumulados sobre o saldo atual
+-- de uma meta, com base numa taxa de juros anual informada.
+-- Utilizada na funcionalidade "Calcular juros acumulados" (RF06).
+--
+-- Parâmetros:
+--   p_meta_id     -> id da meta
+--   p_taxa_anual  -> taxa anual em formato decimal (ex: 0.06 = 6%)
+--
+-- Retorno: valor dos juros calculados (NUMERIC)
+-- =========================================================
+
+CREATE OR REPLACE FUNCTION calcular_juros_poupanca(
+    p_meta_id INTEGER,
+    p_taxa_anual NUMERIC
+)
+RETURNS NUMERIC AS $$
+DECLARE
+    v_saldo_atual NUMERIC;
+    v_data_criacao TIMESTAMP;
+    v_meses_transcorridos INTEGER;
+    v_taxa_mensal NUMERIC;
+    v_juros NUMERIC;
+BEGIN
+    SELECT valor_atual, data_criacao
+    INTO v_saldo_atual, v_data_criacao
+    FROM meta
+    WHERE id = p_meta_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Meta com id % não encontrada', p_meta_id;
+    END IF;
+
+    v_meses_transcorridos := GREATEST(
+        DATE_PART('year', AGE(CURRENT_DATE, v_data_criacao)) * 12
+        + DATE_PART('month', AGE(CURRENT_DATE, v_data_criacao)),
+        0
+    );
+
+    v_taxa_mensal := p_taxa_anual / 12;
+    v_juros := ROUND(v_saldo_atual * v_taxa_mensal * v_meses_transcorridos, 2);
+
+    RETURN v_juros;
+END;
+$$ LANGUAGE plpgsql;
